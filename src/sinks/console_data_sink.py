@@ -13,7 +13,7 @@ class ConsoleDataSink(DataSink):
         output = self.output_format.format(message["key"],
                                            message["value"],
                                            message["ts"])
-        print(output, end="")
+        print(output)
         return True
 
     def close(self) -> None:
