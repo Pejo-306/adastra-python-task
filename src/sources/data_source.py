@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class DataSource(ABC):
 
     @abstractmethod
-    def initialize(self):
+    def initialize(self) -> None:
         pass
 
     @abstractmethod
@@ -12,9 +12,9 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    def read(self) -> str:
+    def read(self) -> dict:
         pass
 
     @abstractmethod
-    def close(self):
+    def close(self) -> None:
         pass
