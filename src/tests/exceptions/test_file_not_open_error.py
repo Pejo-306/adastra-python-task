@@ -7,7 +7,7 @@ class TestFileNotOpenError(TestCase):
 
     def test_raise_error(self):
         filepath = "/file/path"
-        expected_full_message = "{}: File is not open".format(filepath)
+        expected_full_message = f"{filepath}: File is not open"
         try:
             raise FileNotOpenError(filepath)
         except FileNotOpenError as e:
