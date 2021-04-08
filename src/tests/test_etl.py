@@ -46,7 +46,7 @@ class TestETL(TestCase):
         etl.sink(ConsoleDataSink, sink_output_format)
         with CaptureSTDOUT() as output:
             etl.run()
-        self.assertEqual(0, len(output))
+        self.assertEqual(1, len(output))
         self.assertEqual(expected_output, output[0])
 
     def test_method_chaining(self):
@@ -59,5 +59,5 @@ class TestETL(TestCase):
         del etl  # explicitly not required anymore
         with CaptureSTDOUT() as output:
             ETL().source(FileDataSource, source_filepath).sink(ConsoleDataSink, sink_output_format).run()
-        self.assertEqual(0, len(output))
+        self.assertEqual(1, len(output))
         self.assertEqual(expected_output, output[0])

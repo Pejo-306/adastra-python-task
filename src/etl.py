@@ -19,4 +19,7 @@ class ETL:
         return self
 
     def run(self) -> None:
-        pass
+        with self.data_source, self.data_sink:
+            while self.data_source.has_message():
+                message = self.data_source.read()
+                self.data_sink.dump(message)
