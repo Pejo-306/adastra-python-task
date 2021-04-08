@@ -4,14 +4,17 @@ from src.sources.data_source import DataSource
 class FileDataSource(DataSource):
 
     def __init__(self, source_filepath: str) -> None:
-        pass
+        self.source_filepath = source_filepath
+        self._source_file = None
 
     @property
     def is_open(self) -> bool:
-        pass
+        if self._source_file is None:
+            return False
+        return not self._source_file.closed
 
     def initialize(self) -> None:
-        pass
+        self._source_file = open(self.source_filepath, 'r')
 
     def has_message(self) -> bool:
         pass
@@ -20,4 +23,4 @@ class FileDataSource(DataSource):
         pass
 
     def close(self) -> None:
-        pass
+        self._source_file.close()
