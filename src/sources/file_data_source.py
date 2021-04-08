@@ -18,6 +18,12 @@ class FileDataSource(DataSource):
         self._text_chunk_prepend = StringIO()
         self._finished_reading = False
 
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
     @property
     def is_open(self) -> bool:
         if self._source_file is None:
