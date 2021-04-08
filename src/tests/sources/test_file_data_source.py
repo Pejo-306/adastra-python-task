@@ -1,4 +1,5 @@
 import os
+import json
 from unittest import TestCase
 
 from src.definitions import INPUT_FILES_DIR
@@ -91,3 +92,44 @@ class TestFileDataSource(TestCase):
         self.assertTrue(source.is_open)
         source.close()
         self.assertFalse(source.is_open)
+
+    def test_split_json_chunk_with_complete_chunk(self):
+        chunk = '  [  {"key": "11": "value": "111"} , {"key": "22": "value": "222"} , {"key": "33": "value": "333"} ]  '
+        result = tuple(FileDataSource._split_json_chunk(chunk))
+        self.assertEquals(len(result), 3)
+        self.assertEquals(result[0], '{"key": "11": "value": "111"}')
+        self.assertEquals(result[1], '{"key": "22": "value": "222"}')
+        self.assertEquals(result[2], '{"key": "33": "value": "333"}')
+
+    def test_split_json_chunk_with_empty_chunk(self):
+        chunk = ""
+        result = tuple(FileDataSource._split_json_chunk(chunk))
+        self.assertEquals(len(result), 0)
+        chunk = " [     ] "
+        result = tuple(FileDataSource._split_json_chunk(chunk))
+        self.assertEquals(len(result), 0)
+
+    def test_split_json_chunk_with_incomplete_chunk(self):
+        chunk = '  [  {"key": "11": "value": "111"} , {"key": "22": "value": "222"} , {"key": "33": "val'
+        result = tuple(FileDataSource._split_json_chunk(chunk))
+        self.assertEquals(len(result), 3)
+        self.assertEquals(result[0], '{"key": "11": "value": "111"}')
+        self.assertEquals(result[1], '{"key": "22": "value": "222"}')
+        self.assertEquals(result[2], '{"key": "33": "val')
+        with self.assertRaises(json.JSONDecodeError):
+            json.loads(result[2])
+
+    def test_split_json_chunk_with_prepend(self):
+        prepend = '{"key": "33", "val'
+        chunk = 'ue": "333"} , {"key": "44", "value": "444"}  ]  '
+        result = tuple(FileDataSource._split_json_chunk(chunk))
+        self.assertEquals(len(result), 2)
+        self.assertEquals(result[0], 'ue": "333"}')
+        with self.assertRaises(json.JSONDecodeError):
+            json.loads(result[0])
+        self.assertEquals(result[1], '{"key": "44", "value": "444"}')
+
+        result = tuple(FileDataSource._split_json_chunk(chunk, prepend))
+        self.assertEquals(len(result), 2)
+        self.assertEquals(result[0], '{"key": "33", "value": "333"}')
+        self.assertEquals(result[1], '{"key": "44", "value": "444"}')
