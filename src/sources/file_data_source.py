@@ -1,5 +1,7 @@
+import json
 from collections import deque
 from typing import Iterator
+from io import StringIO
 
 from src.sources.data_source import DataSource
 
@@ -11,6 +13,7 @@ class FileDataSource(DataSource):
         self.chunk_size = chunk_size
         self._source_file = None
         self._loaded_chunk = deque()
+        self._text_chunk_prepend = StringIO()
         self._finished_reading = False
 
     @property
@@ -34,6 +37,20 @@ class FileDataSource(DataSource):
         if not self.is_open:
             pass  # TODO: raise exception here
 
+        while True:  # keep loading chunks until a proper message is constructed
+            if len(self._loaded_chunk) == 0:  # load the next chunk
+                self._load_chunk()
+                if len(self._loaded_chunk) == 0:
+                    pass  # TODO: raise exception here/indicate a lack of messages
+
+            text_message = self._loaded_chunk.popleft()  # retrieve the next message
+            try:
+                message = json.loads(text_message)
+            except json.JSONDecodeError:  # read text chunk cannot be parsed as valid json
+                self._text_chunk_prepend.write(text_message)
+            else:
+                return message
+
     def close(self) -> None:
         self._source_file.close()
 
@@ -42,7 +59,10 @@ class FileDataSource(DataSource):
             text_chunk = self._source_file.read(self.chunk_size)
             if len(text_chunk) < self.chunk_size:  # file has been fully read (reached EOF)
                 self._finished_reading = True
-            self._loaded_chunk.extend(self._split_json_chunk(text_chunk))
+            self._loaded_chunk.extend(self._split_json_chunk(text_chunk, self._text_chunk_prepend.getvalue()))
+            # flush text chunk string stream
+            self._text_chunk_prepend.truncate(0)
+            self._text_chunk_prepend.seek(0)
 
     @staticmethod
     def _split_json_chunk(chunk: str, prepend: str = "") -> Iterator[str]:

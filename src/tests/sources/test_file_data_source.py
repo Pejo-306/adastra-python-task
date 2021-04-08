@@ -62,6 +62,22 @@ class TestFileDataSource(TestCase):
         finally:
             source.close()  # assumes FileDataSource.close() works
 
+    def test_read_with_small_chunk_size(self):
+        source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
+        source = FileDataSource(source_filepath, 8)
+        try:
+            source.initialize()
+
+            message = source.read()
+            self.assertIn("key", message)
+            self.assertEqual(message["key"], "A123")
+            self.assertIn("value", message)
+            self.assertEqual(message["value"], "15.6")
+            self.assertIn("ts", message)
+            self.assertEqual(message["ts"], "2020-10-07 13:28:43.399620+02:00")
+        finally:
+            source.close()  # assumes FileDataSource.close() works
+
     def test_multiple_reads(self):
         source_filepath = os.path.join(INPUT_FILES_DIR, "multiple_messages.json")
         source = FileDataSource(source_filepath)
@@ -96,7 +112,7 @@ class TestFileDataSource(TestCase):
 
     def test_load_chunk(self):
         source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
-        source = FileDataSource(source_filepath)
+        source = FileDataSource(source_filepath, 1024)
         try:
             source.initialize()
             self.assertEqual(len(source._loaded_chunk), 0)
