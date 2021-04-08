@@ -5,6 +5,7 @@ from io import StringIO
 
 from src.sources.data_source import DataSource
 from src.exceptions.file_not_open_error import FileNotOpenError
+from src.exceptions.file_source_depleted import FileSourceDepleted
 
 
 class FileDataSource(DataSource):
@@ -42,7 +43,7 @@ class FileDataSource(DataSource):
             if len(self._loaded_chunk) == 0:  # load the next chunk
                 self._load_chunk()
                 if len(self._loaded_chunk) == 0:
-                    pass  # TODO: raise exception here/indicate a lack of messages
+                    raise FileSourceDepleted(self.source_filepath)
 
             text_message = self._loaded_chunk.popleft()  # retrieve the next message
             try:
