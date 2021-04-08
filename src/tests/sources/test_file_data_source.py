@@ -143,7 +143,7 @@ class TestFileDataSource(TestCase):
     def test_context_manager(self):
         source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
         with FileDataSource(source_filepath) as source:
-            self.assertIsInstance(FileDataSource, source)
+            self.assertIsInstance(source, FileDataSource)
             self.assertTrue(source.is_open)
         self.assertFalse(source.is_open)
 

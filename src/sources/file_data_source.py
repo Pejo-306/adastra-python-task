@@ -19,10 +19,11 @@ class FileDataSource(DataSource):
         self._finished_reading = False
 
     def __enter__(self):
-        pass
+        self.initialize()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.close()
 
     @property
     def is_open(self) -> bool:
