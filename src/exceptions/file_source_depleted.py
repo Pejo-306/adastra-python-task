@@ -14,7 +14,6 @@ class FileSourceDepleted(Exception):
         :param message: error message
         :type message: str
         """
-
         self.filepath = filepath
         self.message = message
         super().__init__(message)
@@ -25,5 +24,4 @@ class FileSourceDepleted(Exception):
         :return: full error message
         :rtype: str
         """
-
         return f"{self.filepath}: {self.message}"

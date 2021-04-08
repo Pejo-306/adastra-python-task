@@ -152,10 +152,10 @@ class TestFileDataSource(TestCase):
         source = FileDataSource(source_filepath, 1024)
         try:
             source.initialize()
-            self.assertEqual(len(source._loaded_chunk), 0)
+            self.assertEqual(len(source._loaded_messages), 0)
             source._load_chunk()
-            self.assertEqual(len(source._loaded_chunk), 1)
-            self.assertEqual(source._loaded_chunk[0],
+            self.assertEqual(len(source._loaded_messages), 1)
+            self.assertEqual(source._loaded_messages[0],
                              '{"key": "A123", "value": "15.6", "ts": "2020-10-07 13:28:43.399620+02:00"}')
         finally:
             source.close()
