@@ -6,6 +6,7 @@ from src.definitions import INPUT_FILES_DIR
 from src.sources.data_source import DataSource
 from src.sources.file_data_source import FileDataSource
 from src.exceptions.file_not_open_error import FileNotOpenError
+from src.exceptions.file_source_depleted import FileSourceDepleted
 
 
 class TestFileDataSource(TestCase):
@@ -116,6 +117,20 @@ class TestFileDataSource(TestCase):
         with self.assertRaises(FileNotOpenError) as context:
             source.read()
         self.assertEqual(source_filepath, context.exception.filepath)
+
+    def test_read_on_depleted_file_source(self):
+        source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
+        source = FileDataSource(source_filepath)
+        try:
+            source.initialize()
+            self.assertTrue(source.has_message())
+            source.read()
+            self.assertFalse(source.has_message())
+            with self.assertRaises(FileSourceDepleted) as context:
+                source.read()
+            self.assertEqual(source_filepath, context.exception.filepath)
+        finally:
+            source.close()  # assumes FileDataSource.close() works
 
     def test_close(self):
         source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
