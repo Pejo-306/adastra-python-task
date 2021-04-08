@@ -5,6 +5,7 @@ from unittest import TestCase
 from src.definitions import INPUT_FILES_DIR
 from src.sources.data_source import DataSource
 from src.sources.file_data_source import FileDataSource
+from src.exceptions.file_not_open_error import FileNotOpenError
 
 
 class TestFileDataSource(TestCase):
@@ -45,6 +46,13 @@ class TestFileDataSource(TestCase):
             self.assertFalse(source.has_message())
         finally:
             source.close()  # assumes FileDataSource.close() works
+
+    def test_has_message_on_unopened_file(self):
+        source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
+        source = FileDataSource(source_filepath)
+        with self.assertRaises(FileNotOpenError) as context:
+            source.has_message()
+        self.assertEqual(source_filepath, context.exception.filepath)
 
     def test_read(self):
         source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
@@ -101,6 +109,13 @@ class TestFileDataSource(TestCase):
             self.assertEqual(message["ts"], "2022-10-07 13:28:43.399620+02:00")
         finally:
             source.close()  # assumes FileDataSource.close() works
+
+    def test_read_on_unopened_file(self):
+        source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
+        source = FileDataSource(source_filepath)
+        with self.assertRaises(FileNotOpenError) as context:
+            source.read()
+        self.assertEqual(source_filepath, context.exception.filepath)
 
     def test_close(self):
         source_filepath = os.path.join(INPUT_FILES_DIR, "single_message.json")
