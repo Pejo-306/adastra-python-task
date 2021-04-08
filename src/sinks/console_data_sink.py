@@ -8,6 +8,8 @@ class ConsoleDataSink(DataSink):
         output_format(str): string format of the outputted message
 
     Methods:
+        __enter__(): (see DataSink)
+        __exit__(): (see DataSink)
         initialize(): do nothing (see DataSink)
         dump(message): print a single formatted message on the console (STDOUT)
         close(): do nothing (see DataSink)
@@ -20,6 +22,14 @@ class ConsoleDataSink(DataSink):
         :type output_format: str
         """
         self.output_format = output_format
+
+    def __enter__(self):
+        """Do nothing (see DataSink and ConsoleDataSink.initialize())"""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Do nothing (see DataSink and ConsoleDataSink.close())"""
+        pass
 
     def initialize(self) -> None:
         """Do nothing (see DataSink)
