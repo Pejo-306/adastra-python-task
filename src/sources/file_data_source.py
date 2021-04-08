@@ -4,6 +4,7 @@ from typing import Iterator
 from io import StringIO
 
 from src.sources.data_source import DataSource
+from src.exceptions.file_not_open_error import FileNotOpenError
 
 
 class FileDataSource(DataSource):
@@ -27,7 +28,7 @@ class FileDataSource(DataSource):
 
     def has_message(self) -> bool:
         if not self.is_open:
-            pass  # TODO: raise exception here
+            raise FileNotOpenError(self.source_filepath)
 
         if len(self._loaded_chunk) == 0:  # preemptively load the next chunk
             self._load_chunk()
@@ -35,7 +36,7 @@ class FileDataSource(DataSource):
 
     def read(self) -> dict:
         if not self.is_open:
-            pass  # TODO: raise exception here
+            raise FileNotOpenError(self.source_filepath)
 
         while True:  # keep loading chunks until a proper message is constructed
             if len(self._loaded_chunk) == 0:  # load the next chunk
