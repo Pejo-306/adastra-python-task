@@ -1,0 +1,2 @@
+class FileNotOpenError(Exception):
+    pass
