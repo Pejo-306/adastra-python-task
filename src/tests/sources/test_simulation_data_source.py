@@ -2,6 +2,8 @@ import string
 from unittest import TestCase
 from datetime import datetime
 
+import pytz
+
 from src.sources.data_source import DataSource
 from src.sources.simulation_data_source import SimulationDataSource
 
@@ -10,7 +12,7 @@ class TestSimulationDataSource(TestCase):
 
     def setUp(self):
         self.source = SimulationDataSource()
-        self.test_cases = 100
+        self.test_cases = 1
 
     def test_object_creation(self):
         self.assertIsInstance(self.source, SimulationDataSource)
@@ -44,15 +46,17 @@ class TestSimulationDataSource(TestCase):
 
     def test_get_random_timestamp(self):
         # Test with default datetime range
+        earliest = SimulationDataSource.EARLIEST_DATETIME
+        latest = SimulationDataSource.LATEST_DATETIME
         for _ in range(self.test_cases):
             ts = datetime.strptime(SimulationDataSource._get_random_timestamp(),
-                                   "%Y-%m-%d %H:%M:%S.%f")
-            self.assertTrue(datetime.min <= ts <= SimulationDataSource.LATEST_DATETIME, msg=f"ts = {ts}")
+                                   "%Y-%m-%d %H:%M:%S.%f%z")
+            self.assertTrue(earliest <= ts <= latest, msg=f"ts = {ts}")
 
         # Test with custom datetime range
-        earliest = datetime(year=2019, month=1, day=1, hour=0, minute=0, second=0)
-        latest = datetime(year=2020, month=1, day=1, hour=0, minute=0, second=0)
+        earliest = datetime(year=2019, month=1, day=1, hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+        latest = datetime(year=2020, month=1, day=1, hour=0, minute=0, second=0, tzinfo=pytz.UTC)
         for _ in range(self.test_cases):
             ts = datetime.strptime(SimulationDataSource._get_random_timestamp(earliest, latest),
-                                   "%Y-%m-%d %H:%M:%S.%f")
+                                   "%Y-%m-%d %H:%M:%S.%f%z")
             self.assertTrue(earliest <= ts <= latest, msg=f"ts = {ts}")

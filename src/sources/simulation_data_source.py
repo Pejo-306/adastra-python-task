@@ -2,6 +2,8 @@ import string
 import random
 from datetime import datetime
 
+import pytz
+
 from src.sources.data_source import DataSource
 
 
@@ -12,6 +14,12 @@ class SimulationDataSource(DataSource):
     are generated on a one by one basis when the data source is asked with the
     following format:
         `{"key": <value>, "value": <value>, "ts": <value>}`
+
+    Class attributes:
+        EARLIEST_DATETIME(datetime): earliest aware datetime, used in random
+                                     timestamp generation
+        LATEST_DATETIME(datetime): latest aware datetime, used in random
+                                   timestamp generation
 
     Methods:
         __enter__(): (see DataSource)
@@ -29,7 +37,8 @@ class SimulationDataSource(DataSource):
                                                  range [earliest, latest]
     """
 
-    LATEST_DATETIME = datetime(year=2020, month=12, day=31, hour=23, minute=59, second=59)
+    EARLIEST_DATETIME = datetime.min.replace(tzinfo=pytz.UTC)
+    LATEST_DATETIME = datetime(year=2020, month=12, day=31, hour=23, minute=59, second=59, tzinfo=pytz.UTC)
 
     def __enter__(self):
         """Do nothing (see DataSource and SimulationDataSource.initialize())"""
@@ -105,7 +114,7 @@ class SimulationDataSource(DataSource):
         return str(random.uniform(minimum, maximum))
 
     @staticmethod
-    def _get_random_timestamp(earliest: datetime = datetime.min,
+    def _get_random_timestamp(earliest: datetime = EARLIEST_DATETIME,
                               latest: datetime = LATEST_DATETIME) -> str:
         """Generate a random message timestamp
 
@@ -119,6 +128,7 @@ class SimulationDataSource(DataSource):
         :return: random message timestamp
         :rtype: str
         """
-        # TODO: add timezone info
         delta = latest - earliest
-        return str(earliest + delta * random.uniform(0.0, 1.0))
+        ts = earliest + delta * random.uniform(0.0, 1.0)
+        tz = pytz.timezone(random.choice(pytz.all_timezones))
+        return str(ts.astimezone(tz))
