@@ -1,7 +1,8 @@
-import psycopg2
-import psycopg2.errors
 from unittest import TestCase
 from datetime import datetime
+
+import psycopg2
+import psycopg2.errors
 
 from src.definitions import DATABASE_ENV
 from src.sinks.data_sink import DataSink
