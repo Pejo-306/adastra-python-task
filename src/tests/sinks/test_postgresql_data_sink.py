@@ -3,6 +3,7 @@ import psycopg2.errors
 from unittest import TestCase
 from datetime import datetime
 
+from src.definitions import DATABASE_ENV
 from src.sinks.data_sink import DataSink
 from src.sinks.postgresql_data_sink import PostgreSQLDataSink
 
@@ -11,8 +12,8 @@ class TestPostgreSQLDataSink(TestCase):
 
     def setUp(self):
         self.dbname = "test_schema"
-        self.dbuser = "user"
-        self.dbpassword = "user"
+        self.dbuser = DATABASE_ENV["POSTGRES_USER"]
+        self.dbpassword = DATABASE_ENV["POSTGRES_PASSWORD"]
         self.dbhost = "127.0.0.1"
         self.dbport = 5432
         self.sink = PostgreSQLDataSink(self.dbname, self.dbuser, self.dbpassword, self.dbhost, self.dbport)
@@ -60,7 +61,7 @@ class TestPostgreSQLDataSink(TestCase):
         self.sink.initialize()
         # Make sure there are no messages before dumping
         with self.con.cursor() as cur:
-            cur.execute('SELECT * FROM "Message";')
+            cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
             messages = cur.fetchall()
         self.assertEqual(0, len(messages))
 
@@ -73,7 +74,7 @@ class TestPostgreSQLDataSink(TestCase):
         self.assertTrue(success, "Dump was not successful")
         self.sink.close()
         with self.con.cursor() as cur:
-            cur.execute('SELECT * FROM "Message";')
+            cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
             messages = cur.fetchall()
         self.assertEqual(1, len(messages))
         self.assertEqual("A123", messages[0][1])  # key
@@ -82,14 +83,14 @@ class TestPostgreSQLDataSink(TestCase):
 
         # Clean-up
         with self.con.cursor() as cur:
-            cur.execute('DELETE FROM "Message";')  # delete all dumped messages
+            cur.execute(f'DELETE FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')  # delete all dumped messages
             self.con.commit()
 
     def test_multiple_dumps(self):
         # Make sure there are no messages before dumping
         self.sink.initialize()
         with self.con.cursor() as cur:
-            cur.execute('SELECT * FROM "Message";')
+            cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
             messages = cur.fetchall()
         self.assertEqual(0, len(messages))
 
@@ -109,7 +110,7 @@ class TestPostgreSQLDataSink(TestCase):
         self.assertTrue(success, "Dump was not successful")
         self.sink.close()
         with self.con.cursor() as cur:
-            cur.execute('SELECT * FROM "Message";')
+            cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
             messages = cur.fetchall()
         self.assertEqual(2, len(messages))
         self.assertEqual("A123", messages[0][1])  # key
@@ -121,5 +122,5 @@ class TestPostgreSQLDataSink(TestCase):
 
         # Clean-up
         with self.con.cursor() as cur:
-            cur.execute('DELETE FROM "Message";')  # delete all dumped messages
+            cur.execute(f'DELETE FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')  # delete all dumped messages
             self.con.commit()

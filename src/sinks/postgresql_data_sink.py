@@ -1,9 +1,12 @@
 import psycopg2
 
+from src.definitions import DATABASE_ENV
 from src.sinks.data_sink import DataSink
 
 
 class PostgreSQLDataSink(DataSink):
+
+    MESSAGE_TABLE_NAME = "Message"
 
     def __init__(self, dbname: str, dbuser: str, dbpassword: str,
                  dbhost: str = "127.0.0.1", dbport: int = 5432):
@@ -26,9 +29,9 @@ class PostgreSQLDataSink(DataSink):
         try:
             self._connect_to_db()
         except psycopg2.OperationalError:  # specified database does not exist
-            with psycopg2.connect(database="default_schema", user=self.dbuser,
-                                  password=self.dbpassword, host=self.dbhost,
-                                  port=str(self.dbport)) as con:
+            with psycopg2.connect(database=DATABASE_ENV["POSTGRES_DB"],
+                                  user=self.dbuser, password=self.dbpassword,
+                                  host=self.dbhost, port=str(self.dbport)) as con:
                 with con.cursor() as cur:
                     con.autocommit = True  # cannot create db inside a transaction
                     cur.execute(f'CREATE DATABASE "{self.dbname}"')
@@ -37,8 +40,8 @@ class PostgreSQLDataSink(DataSink):
 
         # Second, create the necessary database table, only if required
         with self._connection.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS "Message" (
+            cur.execute(f"""
+                CREATE TABLE IF NOT EXISTS "{self.MESSAGE_TABLE_NAME}" (
                     id SERIAL PRIMARY KEY,
                     key CHAR(4) NOT NULL,
                     value REAL NOT NULL,
@@ -52,8 +55,8 @@ class PostgreSQLDataSink(DataSink):
         ts, tz = message["ts"].split('+')
         with self._connection.cursor() as cur:
             cur.execute(f"""
-                INSERT INTO "Message" (key, value, ts, tz) 
-                VALUES ('{message["key"]}', {message["value"]}, '{ts}', '{tz}')
+                INSERT INTO "{self.MESSAGE_TABLE_NAME}" (key, value, ts, tz) 
+                VALUES ('{message["key"]}', {message["value"]}, '{ts}', '{tz}');
             """)
             self._connection.commit()
         return True  # since no errors are raised by psycopg2, dump is successful
@@ -62,6 +65,6 @@ class PostgreSQLDataSink(DataSink):
         self._connection.close()
 
     def _connect_to_db(self) -> None:
-        self._connection = psycopg2.connect(database=self.dbname, user=self.dbuser,
-                                            password=self.dbpassword, host=self.dbhost,
-                                            port=str(self.dbport))
+        self._connection = psycopg2.connect(database=self.dbname,
+                                            user=self.dbuser, password=self.dbpassword,
+                                            host=self.dbhost, port=str(self.dbport))
