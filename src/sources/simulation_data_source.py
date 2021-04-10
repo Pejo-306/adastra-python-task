@@ -119,5 +119,6 @@ class SimulationDataSource(DataSource):
         :return: random message timestamp
         :rtype: str
         """
+        # TODO: add timezone info
         delta = latest - earliest
         return str(earliest + delta * random.uniform(0.0, 1.0))

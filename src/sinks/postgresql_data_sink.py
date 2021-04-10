@@ -42,13 +42,21 @@ class PostgreSQLDataSink(DataSink):
                     id SERIAL PRIMARY KEY,
                     key CHAR(4) NOT NULL,
                     value REAL NOT NULL,
-                    ts TIMESTAMPTZ NOT NULL
+                    ts TIMESTAMP NOT NULL,
+                    tz TEXT NOT NULL
                 );
             """)
             self._connection.commit()
 
     def dump(self, message: dict) -> bool:
-        pass
+        ts, tz = message["ts"].split('+')
+        with self._connection.cursor() as cur:
+            cur.execute(f"""
+                INSERT INTO "Message" (key, value, ts, tz) 
+                VALUES ('{message["key"]}', {message["value"]}, '{ts}', '{tz}')
+            """)
+            self._connection.commit()
+        return True  # since no errors are raised by psycopg2, dump is successful
 
     def close(self) -> None:
         self._connection.close()

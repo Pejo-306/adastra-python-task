@@ -23,12 +23,6 @@ class TestPostgreSQLDataSink(TestCase):
             self.fail(f"Test database with name '{self.dbname}' does not exist")
 
     def tearDown(self):
-        try:
-            with self.con.cursor() as cur:
-                cur.execute('DELETE FROM "Message";')  # delete all dumped messages
-                self.con.commit()
-        except psycopg2.errors.UndefinedTable:
-            pass  # table has not been created yet
         self.con.close()
 
     def test_object_creation(self):
@@ -75,15 +69,21 @@ class TestPostgreSQLDataSink(TestCase):
             "value": "15.6",
             "ts": "2020-10-07 13:28:43.399620+02:00"
         }
-        self.sink.dump(message)
+        success = self.sink.dump(message)
+        self.assertTrue(success, "Dump was not successful")
         self.sink.close()
         with self.con.cursor() as cur:
             cur.execute('SELECT * FROM "Message";')
             messages = cur.fetchall()
         self.assertEqual(1, len(messages))
-        self.assertEqual("A123", messages[0][0])  # key
-        self.assertEqual("15.6", messages[0][1])  # value
-        self.assertEqual("2020-10-07 13:28:43.399620+02:00", messages[0][2])  # timestamp
+        self.assertEqual("A123", messages[0][1])  # key
+        self.assertEqual(15.6, messages[0][2])  # value
+        self.assertEqual("2020-10-07 13:28:43.399620+02:00", f"{messages[0][3]}+{messages[0][4]}")  # timestamp
+
+        # Clean-up
+        with self.con.cursor() as cur:
+            cur.execute('DELETE FROM "Message";')  # delete all dumped messages
+            self.con.commit()
 
     def test_multiple_dumps(self):
         # Make sure there are no messages before dumping
@@ -103,16 +103,23 @@ class TestPostgreSQLDataSink(TestCase):
             "value": "12.6",
             "ts": "2022-10-07 13:28:43.399620+02:00"
         }
-        self.sink.dump(message1)
-        self.sink.dump(message2)
+        success = self.sink.dump(message1)
+        self.assertTrue(success, "Dump was not successful")
+        success = self.sink.dump(message2)
+        self.assertTrue(success, "Dump was not successful")
         self.sink.close()
         with self.con.cursor() as cur:
             cur.execute('SELECT * FROM "Message";')
             messages = cur.fetchall()
         self.assertEqual(2, len(messages))
-        self.assertEqual("A123", messages[0][0])  # key
-        self.assertEqual("15.6", messages[0][1])  # value
-        self.assertEqual("2020-10-07 13:28:43.399620+02:00", messages[0][2])  # timestamp
-        self.assertEqual("B123", messages[1][0])  # key
-        self.assertEqual("12.6", messages[1][1])  # value
-        self.assertEqual("2022-10-07 13:28:43.399620+02:00", messages[1][2])  # timestamp
+        self.assertEqual("A123", messages[0][1])  # key
+        self.assertEqual(15.6, messages[0][2])  # value
+        self.assertEqual("2020-10-07 13:28:43.399620+02:00", f"{messages[0][3]}+{messages[0][4]}")  # timestamp
+        self.assertEqual("B123", messages[1][1])  # key
+        self.assertEqual(12.6, messages[1][2])  # value
+        self.assertEqual("2022-10-07 13:28:43.399620+02:00", f"{messages[1][3]}+{messages[1][4]}")  # timestamp
+
+        # Clean-up
+        with self.con.cursor() as cur:
+            cur.execute('DELETE FROM "Message";')  # delete all dumped messages
+            self.con.commit()
