@@ -1,0 +1,18 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres
+    container_name: dev_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user
+      POSTGRES_DB: default_schema
+
+  adminer:
+    image: adminer
+    container_name: dev_adminer
+    restart: always
+    ports:
+      - 8080:8080
