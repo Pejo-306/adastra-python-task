@@ -63,6 +63,7 @@ class TestPostgreSQLDataSink(TestCase):
                 self.con.autocommit = False
 
     def test_dump(self):
+        self.sink.initialize()
         # Make sure there are no messages before dumping
         with self.con.cursor() as cur:
             cur.execute('SELECT * FROM "Message";')
@@ -75,6 +76,7 @@ class TestPostgreSQLDataSink(TestCase):
             "ts": "2020-10-07 13:28:43.399620+02:00"
         }
         self.sink.dump(message)
+        self.sink.close()
         with self.con.cursor() as cur:
             cur.execute('SELECT * FROM "Message";')
             messages = cur.fetchall()
@@ -85,6 +87,7 @@ class TestPostgreSQLDataSink(TestCase):
 
     def test_multiple_dumps(self):
         # Make sure there are no messages before dumping
+        self.sink.initialize()
         with self.con.cursor() as cur:
             cur.execute('SELECT * FROM "Message";')
             messages = cur.fetchall()
@@ -102,6 +105,7 @@ class TestPostgreSQLDataSink(TestCase):
         }
         self.sink.dump(message1)
         self.sink.dump(message2)
+        self.sink.close()
         with self.con.cursor() as cur:
             cur.execute('SELECT * FROM "Message";')
             messages = cur.fetchall()

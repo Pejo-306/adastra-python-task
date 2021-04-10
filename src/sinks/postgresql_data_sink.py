@@ -12,7 +12,7 @@ class PostgreSQLDataSink(DataSink):
         self.dbpassword = dbpassword
         self.dbhost = dbhost
         self.dbport = dbport
-        self._con = None
+        self._connection = None
 
     def __enter__(self):
         self.initialize()
@@ -35,15 +35,25 @@ class PostgreSQLDataSink(DataSink):
                     con.autocommit = False
             self._connect_to_db()  # try again
 
-        # TODO: Second, create the necessary database table, if required
+        # Second, create the necessary database table, only if required
+        with self._connection.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS "Message" (
+                    id SERIAL PRIMARY KEY,
+                    key CHAR(4) NOT NULL,
+                    value REAL NOT NULL,
+                    ts TIMESTAMPTZ NOT NULL
+                );
+            """)
+            self._connection.commit()
 
     def dump(self, message: dict) -> bool:
         pass
 
     def close(self) -> None:
-        self._con.close()
+        self._connection.close()
 
     def _connect_to_db(self) -> None:
-        self._con = psycopg2.connect(database=self.dbname, user=self.dbuser,
-                                     password=self.dbpassword, host=self.dbhost,
-                                     port=str(self.dbport))
+        self._connection = psycopg2.connect(database=self.dbname, user=self.dbuser,
+                                            password=self.dbpassword, host=self.dbhost,
+                                            port=str(self.dbport))
