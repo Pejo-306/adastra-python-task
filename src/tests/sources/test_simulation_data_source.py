@@ -1,3 +1,4 @@
+import string
 from unittest import TestCase
 from datetime import datetime
 
@@ -9,6 +10,7 @@ class TestSimulationDataSource(TestCase):
 
     def setUp(self):
         self.source = SimulationDataSource()
+        self.test_cases = 100
 
     def test_object_creation(self):
         self.assertIsInstance(self.source, SimulationDataSource)
@@ -24,32 +26,33 @@ class TestSimulationDataSource(TestCase):
         self.assertIn("ts", message)
 
     def test_get_random_key(self):
-        test_cases = 100
-        for _ in range(test_cases):
+        for _ in range(self.test_cases):
             key = SimulationDataSource._get_random_key()
-            self.assertIn(key[0], range(ord('A'), ord('Z') + 1))
+            self.assertIn(key[0], string.ascii_uppercase)
             self.assertIn(int(key[1:]), range(100, 1000))
 
     def test_get_random_value(self):
-        test_cases = 100
-        for _ in range(test_cases):
-            value = SimulationDataSource._get_random_value()
+        minimum = 15.0
+        maximum = 25.0
+        for _ in range(self.test_cases):
+            value = SimulationDataSource._get_random_value(minimum, maximum)
             try:
-                float(value)
+                value = float(value)
+                self.assertTrue(minimum <= value <= maximum)
             except ValueError:
                 self.fail("Random value cannot be converted to float value")
 
     def test_get_random_timestamp(self):
-        test_cases = 100
-
         # Test with default datetime range
-        for _ in range(test_cases):
-            ts = datetime.fromisoformat(SimulationDataSource._get_random_timestamp())
-            self.assertTrue(datetime.min <= ts <= SimulationDataSource.LATEST_DATETIME)
+        for _ in range(self.test_cases):
+            ts = datetime.strptime(SimulationDataSource._get_random_timestamp(),
+                                   "%Y-%m-%d %H:%M:%S.%f")
+            self.assertTrue(datetime.min <= ts <= SimulationDataSource.LATEST_DATETIME, msg=f"ts = {ts}")
 
         # Test with custom datetime range
         earliest = datetime(year=2019, month=1, day=1, hour=0, minute=0, second=0)
         latest = datetime(year=2020, month=1, day=1, hour=0, minute=0, second=0)
-        for _ in range(test_cases):
-            ts = datetime.fromisoformat(SimulationDataSource._get_random_timestamp(earliest, latest))
-            self.assertTrue(earliest <= ts <= latest)
+        for _ in range(self.test_cases):
+            ts = datetime.strptime(SimulationDataSource._get_random_timestamp(earliest, latest),
+                                   "%Y-%m-%d %H:%M:%S.%f")
+            self.assertTrue(earliest <= ts <= latest, msg=f"ts = {ts}")
