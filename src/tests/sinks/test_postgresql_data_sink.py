@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.errors
 from unittest import TestCase
 from datetime import datetime
 
@@ -22,9 +23,12 @@ class TestPostgreSQLDataSink(TestCase):
             self.fail(f"Test database with name '{self.dbname}' does not exist")
 
     def tearDown(self):
-        with self.con.cursor() as cur:
-            cur.execute('DELETE FROM "Message";')  # delete all dumped messages
-            self.con.commit()
+        try:
+            with self.con.cursor() as cur:
+                cur.execute('DELETE FROM "Message";')  # delete all dumped messages
+                self.con.commit()
+        except psycopg2.errors.UndefinedTable:
+            pass  # table has not been created yet
         self.con.close()
 
     def test_object_creation(self):
@@ -49,12 +53,14 @@ class TestPostgreSQLDataSink(TestCase):
         except psycopg2.OperationalError:
             self.fail(f"New database with unique name '{new_dbname}' was not created")
         else:
-            with con.cursor() as cur:
-                con.autocommit = True  # cannot drop db from within transaction
-                cur.execute(f"DROP DATABASE {new_dbname}")  # clean up created database
-                con.autocommit = False
+            # close connection to currently open database
             con.close()
             self.sink.close()
+            # drop the new database from the test connection
+            with self.con.cursor() as cur:
+                self.con.autocommit = True  # cannot drop db from within transaction
+                cur.execute(f'DROP DATABASE "{new_dbname}"')  # clean up created database
+                self.con.autocommit = False
 
     def test_dump(self):
         # Make sure there are no messages before dumping
