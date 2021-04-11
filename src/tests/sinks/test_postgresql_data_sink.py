@@ -71,21 +71,21 @@ class TestPostgreSQLDataSink(TestCase):
             "value": "15.6",
             "ts": "2020-10-07 13:28:43.399620+02:00"
         }
-        success = self.sink.dump(message)
-        self.assertTrue(success, "Dump was not successful")
-        self.sink.close()
-        with self.con.cursor() as cur:
-            cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
-            messages = cur.fetchall()
-        self.assertEqual(1, len(messages))
-        self.assertEqual("A123", messages[0][1])  # key
-        self.assertEqual(15.6, messages[0][2])  # value
-        self.assertEqual("2020-10-07 13:28:43.399620+02:00", f"{messages[0][3]}+{messages[0][4]}")  # timestamp
-
-        # Clean-up
-        with self.con.cursor() as cur:
-            cur.execute(f'DELETE FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')  # delete all dumped messages
-            self.con.commit()
+        try:
+            success = self.sink.dump(message)
+            self.assertTrue(success, "Dump was not successful")
+            self.sink.close()
+            with self.con.cursor() as cur:
+                cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
+                messages = cur.fetchall()
+            self.assertEqual(1, len(messages))
+            self.assertEqual("A123", messages[0][1])  # key
+            self.assertEqual(15.6, messages[0][2])  # value
+            self.assertEqual("2020-10-07 13:28:43.399620+02:00", f"{messages[0][3]}{messages[0][4]}")  # timestamp
+        finally:  # Clean-up
+            with self.con.cursor() as cur:
+                cur.execute(f'DELETE FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')  # delete all dumped messages
+                self.con.commit()
 
     def test_multiple_dumps(self):
         # Make sure there are no messages before dumping
@@ -105,23 +105,49 @@ class TestPostgreSQLDataSink(TestCase):
             "value": "12.6",
             "ts": "2022-10-07 13:28:43.399620+02:00"
         }
-        success = self.sink.dump(message1)
-        self.assertTrue(success, "Dump was not successful")
-        success = self.sink.dump(message2)
-        self.assertTrue(success, "Dump was not successful")
-        self.sink.close()
+        try:
+            success = self.sink.dump(message1)
+            self.assertTrue(success, "Dump was not successful")
+            success = self.sink.dump(message2)
+            self.assertTrue(success, "Dump was not successful")
+            self.sink.close()
+            with self.con.cursor() as cur:
+                cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
+                messages = cur.fetchall()
+            self.assertEqual(2, len(messages))
+            self.assertEqual("A123", messages[0][1])  # key
+            self.assertEqual(15.6, messages[0][2])  # value
+            self.assertEqual("2020-10-07 13:28:43.399620+02:00", f"{messages[0][3]}{messages[0][4]}")  # timestamp
+            self.assertEqual("B123", messages[1][1])  # key
+            self.assertEqual(12.6, messages[1][2])  # value
+            self.assertEqual("2022-10-07 13:28:43.399620+02:00", f"{messages[1][3]}{messages[1][4]}")  # timestamp
+        finally:  # Clean-up
+            with self.con.cursor() as cur:
+                cur.execute(f'DELETE FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')  # delete all dumped messages
+                self.con.commit()
+
+    def test_dump_with_invalid_timestamp(self):
+        self.sink.initialize()
+        # Make sure there are no messages before dumping
         with self.con.cursor() as cur:
             cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
             messages = cur.fetchall()
-        self.assertEqual(2, len(messages))
-        self.assertEqual("A123", messages[0][1])  # key
-        self.assertEqual(15.6, messages[0][2])  # value
-        self.assertEqual("2020-10-07 13:28:43.399620+02:00", f"{messages[0][3]}+{messages[0][4]}")  # timestamp
-        self.assertEqual("B123", messages[1][1])  # key
-        self.assertEqual(12.6, messages[1][2])  # value
-        self.assertEqual("2022-10-07 13:28:43.399620+02:00", f"{messages[1][3]}+{messages[1][4]}")  # timestamp
+        self.assertEqual(0, len(messages))
 
-        # Clean-up
-        with self.con.cursor() as cur:
-            cur.execute(f'DELETE FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')  # delete all dumped messages
-            self.con.commit()
+        message = {
+            "key": "A123",
+            "value": "15.6",
+            "ts": "2020-10-07 13:28:43.399620"
+        }
+        try:
+            with self.assertRaises(ValueError):
+                self.sink.dump(message)
+            self.sink.close()
+            with self.con.cursor() as cur:
+                cur.execute(f'SELECT * FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')
+                messages = cur.fetchall()
+            self.assertEqual(0, len(messages))
+        finally:  # Clean-up
+            with self.con.cursor() as cur:
+                cur.execute(f'DELETE FROM "{PostgreSQLDataSink.MESSAGE_TABLE_NAME}";')  # delete all dumped messages
+                self.con.commit()

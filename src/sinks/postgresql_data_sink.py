@@ -1,3 +1,5 @@
+import re
+
 import psycopg2
 
 from src.definitions import DATABASE_ENV
@@ -18,6 +20,7 @@ class PostgreSQLDataSink(DataSink):
 
     Class attributes:
         MESSAGE_TABLE_NAME(str): name of database table where messages are dumped
+        TIMESTAMP_PATTERN(re.Match): compiled regex object for timestamps with timezone info
 
     Attributes:
         dbname(str): database name
@@ -38,6 +41,7 @@ class PostgreSQLDataSink(DataSink):
     """
 
     MESSAGE_TABLE_NAME = "Message"
+    TIMESTAMP_PATTERN = re.compile(r"^(?P<ts>[-.:0-9 ]+)(?P<tz>[+-][0-9:]+)$")
 
     def __init__(self, dbname: str, dbuser: str, dbpassword: str,
                  dbhost: str = "127.0.0.1", dbport: int = 5432):
@@ -117,7 +121,10 @@ class PostgreSQLDataSink(DataSink):
         :return: status which indicates whether the dump was successful
         :rtype: bool
         """
-        ts, tz = message["ts"].split('+')
+        match = self.TIMESTAMP_PATTERN.match(message["ts"])
+        if not match:  # improperly formatted timestamp
+            raise ValueError(f'Improperly formatted timestamp: {message["ts"]}')
+        ts, tz = match.group("ts"), match.group("tz")
         with self._connection.cursor() as cur:
             cur.execute(f"""
                 INSERT INTO "{self.MESSAGE_TABLE_NAME}" (key, value, ts, tz) 
