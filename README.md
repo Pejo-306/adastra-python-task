@@ -13,6 +13,7 @@ as a small task when I was applying to for a junior position in **Adastra Bulgar
   - [Setting up a Python virtual environment](#setting-up-a-python-virtual-environment)
   - [Running a PostgreSQL server with Adminer](#running-a-postgresql-server-with-adminer)
   - [Running the pseudo ETL system](#running-the-pseudo-etl-system)
+  - [Running Python unit tests (Optional)](#running-python-unit-tests-optional)
 * [Built with](#built-with)
 * [License](#license)
 
@@ -180,6 +181,23 @@ $ python3 main.py
 ```
 
 A simple console front-end is provided to work with ETL tasks.
+
+### Running Python unit tests (Optional)
+
+You may run this project's **Python** unit tests with the following command
+(from the project's root directory)*:
+```bash
+$ ./venv/bin/python3 -m unittest discover -s ./src/tests/
+```
+
+Alternatively, via the system's **Python 3** interpreter:
+```bash
+$ python3 -m unittest discover -s ./src/tests/
+```
+
+*__Note__: you must have a running *PostgreSQL* server, otherwise the unit tests for
+*'PostgreSQLDataSink'* will fail. See [this section](#running-a-postgresql-server-with-adminer)
+for more details on how to set up a *PostgreSQL* server.
 
 ## Built with
 
