@@ -1,7 +1,8 @@
-# Adastra Python Task
+# Simple Pseudo ETL System
 
-This project is a pseudo ETL system, designed in *Python*. It was developed
-as a small task when I was applying to for a junior position in **Adastra Bulgaria**.
+Pseudo ETL system in *Python* with a simple interface for data sources and data sinks.
+It was developed as a small task when I was applying to for a junior position in
+**Adastra Bulgaria**.
 
 ## Table of contents
 
@@ -16,6 +17,7 @@ as a small task when I was applying to for a junior position in **Adastra Bulgar
   - [Running Python unit tests (Optional)](#running-python-unit-tests-optional)
 * [Built with](#built-with)
 * [License](#license)
+* [See more](#see-more)
 
 ## Short description
 
@@ -209,3 +211,8 @@ for more details on how to set up a *PostgreSQL* server.
 ## License
 
 This project is distributed under the [MIT license](LICENSE).
+
+## See more
+
+* [Simple Pseudo ETL System - Dockerized](https://github.com/Pejo-306/adastra-python-task-dockerized):
+  This ETL system funneled from local application to a Docker Swarm stack via a CI/CD pipeline
