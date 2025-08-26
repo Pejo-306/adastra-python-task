@@ -214,5 +214,5 @@ This project is distributed under the [MIT license](LICENSE).
 
 ## See more
 
-* [Simple Pseudo ETL System - Dockerized](https://github.com/Pejo-306/adastra-python-task-dockerized):
+* [CI/CD Pipeline for Lightweight ETL System](https://github.com/Pejo-306/adastra-python-task-dockerized):
   This ETL system funneled from local application to a Docker Swarm stack via a CI/CD pipeline
