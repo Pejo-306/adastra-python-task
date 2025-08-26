@@ -1,4 +1,4 @@
-# Simple Pseudo ETL System
+# Lightweight ETL System
 
 Pseudo ETL system in *Python* with a simple interface for data sources and data sinks.
 It was developed as a small task when I was applying to for a junior position in
